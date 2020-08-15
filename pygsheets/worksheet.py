@@ -1605,20 +1605,17 @@ class Worksheet(object):
         Example 1:
         lst_values = [[[64, 68, 13]], [[15, 3, 54]]]
         lst_types = [['ONE_OF_LIST'], ['ONE_OF_LIST']]
-        ws.set_data_validations(start='D3', end='D4', condition_values=lst_values, condition_type=lst_type,
-                            showCustomUi=True)
+        ws.set_data_validations(start='D3', end='D4', condition_values=lst_values, condition_type=lst_type, showCustomUi=True)
 
         Example 2:
         lst_values = [[[58, 48, 74], [5, 51, 20]]]
         lst_types = [['ONE_OF_LIST', 'ONE_OF_LIST']]
-        ws.set_data_validations(start='D3', end='E3', condition_values=lst_values, condition_type=lst_type,
-                            showCustomUi=True)
+        ws.set_data_validations(start='D3', end='E3', condition_values=lst_values, condition_type=lst_type, showCustomUi=True)
 
         Example 3:
         lst_values = [[[58, 48, 74], [5, 51, 20]]]
         condition_type = 'ONE_OF_LIST'
-        ws.set_data_validations(start='D3', end='E3', condition_values=lst_values, condition_type=condition_type,
-                            showCustomUi=True)
+        ws.set_data_validations(start='D3', end='E3', condition_values=lst_values, condition_type=condition_type, showCustomUi=True)
         """
 
         if not grange:
