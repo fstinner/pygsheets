@@ -1579,6 +1579,87 @@ class Worksheet(object):
             request['setDataValidation']['rule'] = rule
         self.client.sheet.batch_update(self.spreadsheet.id, request)
 
+    def set_data_validations(self, start=None, end=None, condition_type=None, condition_values=None,
+                             grange=None, **kwargs):
+        """
+        Sets a list of data validation rule to every cell in the range. To clear validation in a range,
+        call this with no condition_type specified. Condition
+
+        refer to `api docs <https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#conditiontype>`__ for possible inputs.
+
+        :param start: start address
+        :param end: end address
+        :param grange: address as grid range
+        :param condition_type: list or str of validation condition type: if str is used, condition_type will be set for all cells in range
+                        `possible values <https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#conditiontype>`__
+        :param condition_values: list of list of values for supporting condition type. For example ,
+                        when condition_type is NUMBER_BETWEEN, value should be two numbers indicationg lower
+                        and upper bound. See api docs for more info.
+        :param kwargs: other options of rule.
+                        possible values: inputMessage, strict, showCustomUi
+                        `ref <https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/cells#datavalidationrule>`__
+
+        Examples:
+
+        Example 1:
+        lst_values = [[[22, 52, 12], [78, 70, 14]]]
+        lst_types = [['ONE_OF_LIST', 'ONE_OF_LIST']]
+        ws.set_data_validations(start='D3', end='D4', condition_values=lst_values, condition_type=lst_type,
+                            showCustomUi=True)
+
+        Example 2:
+        lst_values = [[[15, 23, 71]], [[50, 45, 44]]]
+        lst_types = [['ONE_OF_LIST'], ['ONE_OF_LIST']]
+        ws.set_data_validations(start='D3', end='E3', condition_values=lst_values, condition_type=lst_type,
+                            showCustomUi=True)
+
+        Example 3:
+        lst_values = [[[15, 23, 71]], [[50, 45, 44]]]
+        condition_type = 'ONE_OF_LIST'
+        ws.set_data_validations(start='D3', end='E3', condition_values=lst_values, condition_type=condition_type,
+                            showCustomUi=True)
+        """
+
+        if not grange:
+            grange = GridRange(worksheet=self, start=start, end=end)
+        grange.set_worksheet(self)
+        condition_values = list() if not condition_values else condition_values
+        requests = []
+
+        for col in range(grange.start[1], grange.end[1] + 1):
+            for row in range(grange.start[0], grange.end[0] + 1):
+                adress = Address((row, col))
+                grange_local = GridRange(worksheet=self, start=adress, end=adress)
+                values = condition_values[col - grange.start[1]][row - grange.start[0]]
+                if type(condition_type) == str:
+                    condition_type_local = condition_type
+                else:
+                    condition_type_local = condition_type[col - grange.start[1]][row - grange.start[0]]
+                json_values = []
+                for value in values:
+                    if condition_type_local in \
+                            ['DATE_BEFORE', 'DATE_AFTER', 'DATE_ON_OR_BEFORE', 'DATE_ON_OR_AFTER']:
+                        json_values.append({'relativeDate': str(value)})
+                    else:
+                        json_values.append({'userEnteredValue': str(value)})
+
+                request = {"setDataValidation": {
+                    "range": grange_local.to_json()
+                }
+                }
+                if condition_type:
+                    rule = {'condition': {
+                        'type': condition_type_local,
+                        'values': json_values
+                    }
+                    }
+                    for kwarg in kwargs:
+                        rule[kwarg] = kwargs[kwarg]
+                    request['setDataValidation']['rule'] = rule
+                requests.append(request)
+
+        self.client.sheet.batch_update(self.spreadsheet.id, requests)
+
     def __eq__(self, other):
         return self.id == other.id and self.spreadsheet == other.spreadsheet
 
