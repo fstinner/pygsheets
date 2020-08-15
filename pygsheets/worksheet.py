@@ -1591,8 +1591,9 @@ class Worksheet(object):
         :param end: end address
         :param grange: address as grid range
         :param condition_type: list or str of validation condition type: if str is used, condition_type will be set for all cells in range
+                        (condition_types[row][col] beginning from start)
                         `possible values <https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#conditiontype>`__
-        :param condition_values: list of list of values for supporting condition type. For example ,
+        :param condition_values: list of list of values for supporting condition type (condition_values[row][col] beginning from start). For example ,
                         when condition_type is NUMBER_BETWEEN, value should be two numbers indicationg lower
                         and upper bound. See api docs for more info.
         :param kwargs: other options of rule.
@@ -1602,19 +1603,19 @@ class Worksheet(object):
         Examples:
 
         Example 1:
-        lst_values = [[[22, 52, 12], [78, 70, 14]]]
-        lst_types = [['ONE_OF_LIST', 'ONE_OF_LIST']]
+        lst_values = [[[64, 68, 13]], [[15, 3, 54]]]
+        lst_types = [['ONE_OF_LIST'], ['ONE_OF_LIST']]
         ws.set_data_validations(start='D3', end='D4', condition_values=lst_values, condition_type=lst_type,
                             showCustomUi=True)
 
         Example 2:
-        lst_values = [[[15, 23, 71]], [[50, 45, 44]]]
-        lst_types = [['ONE_OF_LIST'], ['ONE_OF_LIST']]
+        lst_values = [[[58, 48, 74], [5, 51, 20]]]
+        lst_types = [['ONE_OF_LIST', 'ONE_OF_LIST']]
         ws.set_data_validations(start='D3', end='E3', condition_values=lst_values, condition_type=lst_type,
                             showCustomUi=True)
 
         Example 3:
-        lst_values = [[[15, 23, 71]], [[50, 45, 44]]]
+        lst_values = [[[58, 48, 74], [5, 51, 20]]]
         condition_type = 'ONE_OF_LIST'
         ws.set_data_validations(start='D3', end='E3', condition_values=lst_values, condition_type=condition_type,
                             showCustomUi=True)
@@ -1625,16 +1626,15 @@ class Worksheet(object):
         grange.set_worksheet(self)
         condition_values = list() if not condition_values else condition_values
         requests = []
-
-        for col in range(grange.start[1], grange.end[1] + 1):
-            for row in range(grange.start[0], grange.end[0] + 1):
+        for row in range(grange.start[0], grange.end[0] + 1):
+            for col in range(grange.start[1], grange.end[1] + 1):
                 adress = Address((row, col))
                 grange_local = GridRange(worksheet=self, start=adress, end=adress)
-                values = condition_values[col - grange.start[1]][row - grange.start[0]]
+                values = condition_values[row - grange.start[0]][col - grange.start[1]]
                 if type(condition_type) == str:
                     condition_type_local = condition_type
                 else:
-                    condition_type_local = condition_type[col - grange.start[1]][row - grange.start[0]]
+                    condition_type_local = condition_type[row - grange.start[0]][col - grange.start[1]]
                 json_values = []
                 for value in values:
                     if condition_type_local in \
