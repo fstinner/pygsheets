@@ -1605,26 +1605,33 @@ class Worksheet(object):
         Example 1:
         lst_values = [[[64, 68, 13]], [[15, 3, 54]]]
         lst_types = [['ONE_OF_LIST'], ['ONE_OF_LIST']]
-        ws.set_data_validations(start='D3', end='D4', condition_values=lst_values, condition_type=lst_type, showCustomUi=True)
+        ws.set_data_validations(start='D3', end='D4', condition_values=lst_values, condition_type=lst_type,
+                            showCustomUi=True)
 
         Example 2:
         lst_values = [[[58, 48, 74], [5, 51, 20]]]
         lst_types = [['ONE_OF_LIST', 'ONE_OF_LIST']]
-        ws.set_data_validations(start='D3', end='E3', condition_values=lst_values, condition_type=lst_type, showCustomUi=True)
+        ws.set_data_validations(start='D3', end='E3', condition_values=lst_values, condition_type=lst_type,
+                            showCustomUi=True)
 
         Example 3:
         lst_values = [[[58, 48, 74], [5, 51, 20]]]
         condition_type = 'ONE_OF_LIST'
-        ws.set_data_validations(start='D3', end='E3', condition_values=lst_values, condition_type=condition_type, showCustomUi=True)
+        ws.set_data_validations(start='D3', end='E3', condition_values=lst_values, condition_type=condition_type,
+                            showCustomUi=True)
         """
 
         if not grange:
             grange = GridRange(worksheet=self, start=start, end=end)
         grange.set_worksheet(self)
         condition_values = list() if not condition_values else condition_values
+
+        height = min(grange.height, len(condition_values)) if len(condition_values) > 0 else grange.height
+        width = min(grange.width, len(condition_values[0])) if len(condition_values[0]) > 0 else grange.width
+
         requests = []
-        for row in range(grange.start[0], grange.end[0] + 1):
-            for col in range(grange.start[1], grange.end[1] + 1):
+        for row in range(grange.start[0], grange.start[0] + height):
+            for col in range(grange.start[1], grange.start[1] + width):
                 adress = Address((row, col))
                 grange_local = GridRange(worksheet=self, start=adress, end=adress)
                 values = condition_values[row - grange.start[0]][col - grange.start[1]]
@@ -1644,7 +1651,7 @@ class Worksheet(object):
                     "range": grange_local.to_json()
                 }
                 }
-                if condition_type:
+                if condition_type_local:
                     rule = {'condition': {
                         'type': condition_type_local,
                         'values': json_values
