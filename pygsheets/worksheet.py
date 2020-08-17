@@ -1159,6 +1159,32 @@ class Worksheet(object):
         else:
             return DataRange(worksheet=self, namedjson=res)
 
+    def create_named_ranges(self, names, starts, ends, granges=None):
+        """Create new named ranges in this worksheet. Provide either starts and ends or granges.
+
+        Reference: `Named range Api object <https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets#namedrange>`_
+
+        :param names:    Name of the range.
+        :param starts:   Top left cell address (label or coordinates)
+        :param ends:     Bottom right cell address (label or coordinates)
+        :param granges:  grid range, object of :class:`GridRange`
+        """
+
+        requests = list()
+        for i, name in enumerate(names):
+            if not granges:
+                grange = GridRange(worksheet=self, start=starts[i], end=ends[i])
+            else:
+                grange = granges[i]
+            request = {"addNamedRange": {
+                "namedRange": {
+                    "name": name,
+                    "range": grange.to_json()
+                }}}
+            requests.append(request)
+        self.client.sheet.batch_update(self.spreadsheet.id, requests)
+
+
     def get_named_range(self, name):
         """Get a named range by name.
 
